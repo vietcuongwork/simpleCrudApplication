@@ -13,9 +13,4 @@ public class PublisherService {
         this.publisherRepository = publisherRepository;
     }
 
-
-    public Publisher findByPublisherName(String publisherName) {
-        return publisherRepository.findByPublisherName(publisherName);
-    }
-
 }

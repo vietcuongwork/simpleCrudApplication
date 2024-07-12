@@ -1,15 +1,15 @@
 package com.vietcuong.simpleCrudApplication.controller;
 
 import com.vietcuong.simpleCrudApplication.common.ResponseStatus;
-import com.vietcuong.simpleCrudApplication.exception.BookExistedException;
-import com.vietcuong.simpleCrudApplication.exception.BookNotExistException;
-import com.vietcuong.simpleCrudApplication.exception.EmptyDatabaseException;
+import com.vietcuong.simpleCrudApplication.exception.*;
 import com.vietcuong.simpleCrudApplication.model.Author;
 import com.vietcuong.simpleCrudApplication.model.Book;
+import com.vietcuong.simpleCrudApplication.model.Language;
 import com.vietcuong.simpleCrudApplication.repository.BookRepository;
 import com.vietcuong.simpleCrudApplication.response.BookControllerResponse;
 import com.vietcuong.simpleCrudApplication.service.AuthorService;
 import com.vietcuong.simpleCrudApplication.service.BookService;
+import com.vietcuong.simpleCrudApplication.service.LanguageService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,12 +25,14 @@ public class BookController {
     private final BookService bookService;
     private final BookControllerResponse bookControllerResponse;
     private final AuthorService authorService;
+    private final LanguageService languageService;
 
-    public BookController(BookRepository bookRepository, BookService bookService, BookControllerResponse bookControllerResponse, AuthorService authorService) {
+    public BookController(BookRepository bookRepository, BookService bookService, BookControllerResponse bookControllerResponse, AuthorService authorService, LanguageService languageService) {
         this.bookRepository = bookRepository;
         this.bookService = bookService;
         this.bookControllerResponse = bookControllerResponse;
         this.authorService = authorService;
+        this.languageService = languageService;
     }
 
     @PostMapping("/addBook")
@@ -101,14 +103,52 @@ public class BookController {
         }
     }
 
+    @GetMapping("/getBooksByAuthor/{id}")
+    public BookControllerResponse<?> getBooksByAuthorId(
+            @PathVariable
+            Integer id) {
+        try {
+            BookControllerResponse<List<Book>> response = bookControllerResponse.initializeResponse();
+            response.setContent(bookService.getByAuthorId(id));
+            return response;
+        } catch (AuthorNotExistException e) {
+            return bookControllerResponse.createErrorResponse(ResponseStatus.BookControllerResponse.AUTHOR_NOT_EXIST, e);
+        }
+    }
 
-    @GetMapping("allAuthors")
+    @GetMapping("/getBooksByLanguage/{language}")
+    public BookControllerResponse<?> getBooksByLanguage(
+            @PathVariable
+            String language) {
+        try {
+            BookControllerResponse<List<Book>> response = bookControllerResponse.initializeResponse();
+            response.setContent(bookService.getByLanguageName(language));
+            return response;
+        } catch (LanguageNotExistException e) {
+            return bookControllerResponse.createErrorResponse(ResponseStatus.BookControllerResponse.LANGUAGE_NOT_EXIST, e);
+        }
+    }
+
+    @GetMapping("/getAllAuthors")
     public BookControllerResponse<?> getAllAuthors() {
         BookControllerResponse<List<Author>> response = bookControllerResponse.initializeResponse();
         response.setContent(authorService.getAllAuthors());
         return response;
+    }
+
+    @GetMapping("/getAllLanguages")
+    public BookControllerResponse<?> getAllLanguages() {
+        BookControllerResponse<List<Language>> response = bookControllerResponse.initializeResponse();
+        response.setContent(languageService.getAllLanguages());
+        return response;
 
     }
 
-
+    @PostMapping("/addBookList")
+    public BookControllerResponse<?> addBookList(
+            @RequestBody
+            List<Book> bookList) {
+        bookService.addListOfBooks(bookList);
+        return bookControllerResponse.createSuccessResponse("Add successfully");
+    }
 }

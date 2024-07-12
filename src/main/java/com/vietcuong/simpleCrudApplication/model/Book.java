@@ -1,7 +1,5 @@
 package com.vietcuong.simpleCrudApplication.model;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,8 +16,6 @@ import java.util.Set;
 @AllArgsConstructor
 @Entity
 @Table(name = "book")
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "bookId") // !
 public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,8 +42,7 @@ public class Book {
     @JoinColumn(name = "language_id")
     private Language language;
 
-    @ManyToMany(fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL)
+    @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "book_author",
             joinColumns = @JoinColumn(name = "book_id",
                     referencedColumnName = "book_id"),

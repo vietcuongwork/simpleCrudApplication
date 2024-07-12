@@ -5,7 +5,9 @@ public class ResponseStatus {
         REQUEST_SUCCESS("00", "REQUEST_SUCCESS"),
         EMPTY_DATABASE("01", "EMPTY_DATABASE"),
         BOOK_NOT_EXIST("02", "BOOK_NOT_EXIST"),
-        BOOK_EXISTED("03", "BOOK_EXISTED");
+        BOOK_EXISTED("03", "BOOK_EXISTED"),
+        AUTHOR_NOT_EXIST("04", "AUTHOR_NOT_EXIST"),
+        LANGUAGE_NOT_EXIST("05", "LANGUAGE_NOT_EXIST");
 
         private final String statusCode;
         private final String description;

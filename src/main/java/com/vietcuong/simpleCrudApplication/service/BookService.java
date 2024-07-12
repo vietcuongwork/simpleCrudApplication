@@ -1,34 +1,69 @@
 package com.vietcuong.simpleCrudApplication.service;
 
-import com.vietcuong.simpleCrudApplication.exception.BookExistedException;
-import com.vietcuong.simpleCrudApplication.exception.BookNotExistException;
-import com.vietcuong.simpleCrudApplication.exception.EmptyDatabaseException;
+import com.vietcuong.simpleCrudApplication.exception.*;
+import com.vietcuong.simpleCrudApplication.model.Author;
 import com.vietcuong.simpleCrudApplication.model.Book;
+import com.vietcuong.simpleCrudApplication.model.Language;
+import com.vietcuong.simpleCrudApplication.model.Publisher;
 import com.vietcuong.simpleCrudApplication.repository.AuthorRepository;
 import com.vietcuong.simpleCrudApplication.repository.BookRepository;
+import com.vietcuong.simpleCrudApplication.repository.LanguageRepository;
+import com.vietcuong.simpleCrudApplication.repository.PublisherRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Transactional
 public class BookService {
     private final BookRepository bookRepository;
     private final AuthorService authorService;
+    private final AuthorRepository authorRepository;
+    private final LanguageRepository languageRepository;
+    private final PublisherRepository publisherRepository;
+    private final LanguageService languageService;
 
-    public BookService(BookRepository bookRepository, AuthorRepository authorRepository, AuthorService authorService, AuthorRepository authorRepository1) {
+    public BookService(BookRepository bookRepository, AuthorRepository authorRepository, AuthorService authorService, AuthorRepository authorRepository1, AuthorRepository authorRepository2, LanguageRepository languageRepository, PublisherRepository publisherRepository, LanguageService languageService) {
         this.bookRepository = bookRepository;
         this.authorService = authorService;
 
+        this.authorRepository = authorRepository;
+        this.languageRepository = languageRepository;
+        this.publisherRepository = publisherRepository;
+        this.languageService = languageService;
     }
 
     public void addBook(Book requestBook) {
         if (!findBookByTitle(requestBook)) {
             throw new BookExistedException();
         }
+
+        Optional<Language> languageOptional = languageRepository.findByLanguageName(requestBook.getLanguage()
+                .getLanguageName());
+        languageOptional.ifPresent(requestBook::setLanguage);
+        Optional<Publisher> publisherOptional = publisherRepository.findByPublisherName(requestBook.getPublisher()
+                .getPublisherName());
+        publisherOptional.ifPresent(requestBook::setPublisher);
+        Set<String> authorNames = new HashSet<>();
+        for (Author author : requestBook.getAuthors()) {
+            authorNames.add(author.getAuthorName());
+        }
+        Set<Author> authors = new HashSet<>();
+        for (String authorName : authorNames) {
+            Optional<Author> authorOptional = authorRepository.findByAuthorName(authorName);
+            if (authorOptional.isPresent()) {
+                authors.add(authorOptional.get());
+            } else {
+                // Create a new author if not found (Optional)
+                Author newAuthor = new Author();
+                newAuthor.setAuthorName(authorName);
+                authors.add(authorRepository.save(newAuthor));
+            }
+        }
+        requestBook.setAuthors(authors);
+
         bookRepository.save(requestBook);
     }
 
@@ -46,7 +81,7 @@ public class BookService {
         if (book.isEmpty()) {
             throw new BookNotExistException();
         }
-        return bookRepository.findById(id);
+        return book;
     }
 
 
@@ -69,6 +104,34 @@ public class BookService {
             throw new BookNotExistException();
         }
         bookRepository.deleteById(id);
+    }
+
+    public List<Book> getByAuthorId(Integer id) throws AuthorNotExistException {
+        Optional<Author> authorOptional = authorService.findByAuthorId(id);
+        List<Book> bookList = new ArrayList<>();
+        if (authorOptional.isEmpty()) {
+            throw new AuthorNotExistException();
+        }
+        bookList = bookRepository.findBooksByAuthorId(id);
+        return bookList;
+    }
+
+    public List<Book> getByLanguageName(String languageName) throws LanguageNotExistException {
+        Optional<Language> languageOptional = languageRepository.findByLanguageName(languageName);
+        List<Book> bookList = new ArrayList<>();
+        if (languageOptional.isEmpty()) {
+            throw new LanguageNotExistException();
+        }
+        bookList = bookRepository.findBooksByLanguageName(languageName);
+        return bookList;
+    }
+
+    public void addListOfBooks(List<Book> bookList) throws BookExistedException {
+        for (Book book : bookList) {
+            if (findBookByTitle(book)) {
+                addBook(book);
+            }
+        }
     }
 
     public void setBookInfoUtil(Book setBook, Book getBook) {
