@@ -3,89 +3,67 @@ package com.vietcuong.simpleCrudApplication.service;
 import com.vietcuong.simpleCrudApplication.exception.BookExistedException;
 import com.vietcuong.simpleCrudApplication.exception.BookNotExistException;
 import com.vietcuong.simpleCrudApplication.exception.EmptyDatabaseException;
-import com.vietcuong.simpleCrudApplication.model.Author;
 import com.vietcuong.simpleCrudApplication.model.Book;
-import com.vietcuong.simpleCrudApplication.model.Language;
-import com.vietcuong.simpleCrudApplication.model.Publisher;
 import com.vietcuong.simpleCrudApplication.repository.AuthorRepository;
 import com.vietcuong.simpleCrudApplication.repository.BookRepository;
-import com.vietcuong.simpleCrudApplication.repository.LanguageRepository;
-import com.vietcuong.simpleCrudApplication.repository.PublisherRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
 public class BookService {
     private final BookRepository bookRepository;
     private final AuthorService authorService;
-    private final PublisherService publisherService;
-    private final LanguageService languageService;
 
-    public BookService(BookRepository bookRepository, AuthorRepository authorRepository, LanguageRepository languageRepository, PublisherRepository publisherRepository, AuthorService authorService, AuthorRepository authorRepository1, PublisherService publisherService, LanguageService languageService) {
+    public BookService(BookRepository bookRepository, AuthorRepository authorRepository, AuthorService authorService, AuthorRepository authorRepository1) {
         this.bookRepository = bookRepository;
         this.authorService = authorService;
-        this.publisherService = publisherService;
-        this.languageService = languageService;
-    }
 
-    @Transactional
-    public List<Book> getAllBooks() {
-        List<Book> bookList = bookRepository.getAllBooks();
-        if (bookList.isEmpty()) {
-            throw new EmptyDatabaseException();
-        }
-        return bookList;
-    }
-
-    public Optional<Book> getBookById(Integer id) throws BookNotExistException {
-        Optional<Book> book = bookRepository.findById(id);
-        if (book.isEmpty()) {
-            throw new BookNotExistException();
-        }
-        return bookRepository.findBookById(id);
     }
 
     public void addBook(Book requestBook) {
         if (!findBookByTitle(requestBook)) {
             throw new BookExistedException();
         }
-        Language language = languageService.findOrCreateLanguageByName(requestBook.getLanguage().getLanguageName());
-        Publisher publisher = publisherService.findOrCreatePublisherByName(requestBook.getPublisher()
-                .getPublisherName());
-        Set<Author> authors = new HashSet<>();
-        for (Author a : requestBook.getAuthors()) {
-            Author author = authorService.findOrCreateAuthorByName(a.getAuthorName());
-            authors.add(author);
-        }
-        Book newBook = new Book();
-        setBookInfoUtil(newBook, requestBook);
-        newBook.setLanguage(language); // Set Language entity
-        newBook.setPublisher(publisher); // Set Publisher entity
-        newBook.setAuthors(authors); // Set Author entities
-
-        bookRepository.save(newBook); // Save the newBook instance with populated values
-        printBookData(newBook);
+        bookRepository.save(requestBook);
     }
 
-    /*    @Transactional
-        public void updateBookById(Integer id, Book updateBook) throws BookNotExistException {
-            Optional<Book> book = bookRepository.findById(id);
-            if (book.isEmpty()) {
-                throw new BookNotExistException();
-            }
-            Book currentBook = book.get();
-            this.setBookInfoUtil(currentBook, updateBook);
-            bookRepository.save(currentBook);
 
+    public List<Book> getAllBooks() {
+        List<Book> bookList = bookRepository.findAll();
+        if (bookList.isEmpty()) {
+            throw new EmptyDatabaseException();
+        }
+        return bookList;
+    }
 
-        }*/
+    public Optional<Book> getById(Integer id) throws BookNotExistException {
+        Optional<Book> book = bookRepository.findById(id);
+        if (book.isEmpty()) {
+            throw new BookNotExistException();
+        }
+        return bookRepository.findById(id);
+    }
+
 
     @Transactional
-    public void deleteBookById(Integer id) throws BookNotExistException {
+    public void updateBookById(Integer id, Book updateBook) throws BookNotExistException {
+        Optional<Book> book = bookRepository.findById(id);
+        if (book.isEmpty()) {
+            throw new BookNotExistException();
+        }
+        Book currentBook = book.get();
+        this.setBookInfoUtil(currentBook, updateBook);
+        bookRepository.save(currentBook);
+    }
+
+
+    @Transactional
+    public void deleteById(Integer id) throws BookNotExistException {
         Optional<Book> book = bookRepository.findById(id);
         if (book.isEmpty()) {
             throw new BookNotExistException();
@@ -115,7 +93,7 @@ public class BookService {
     }
 
 
-    private void printBookData(Book book) {
+   /* private void printBookData(Book book) {
         System.out.println("Fetched Book Data:");
         System.out.println("Book ID: " + book.getBookId());
         System.out.println("Title: " + book.getTitle());
@@ -148,5 +126,5 @@ public class BookService {
                 System.out.println(" - Author Name: " + author.getAuthorName());
             }
         }
-    }
+    }*/
 }

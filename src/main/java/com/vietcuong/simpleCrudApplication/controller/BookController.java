@@ -33,37 +33,6 @@ public class BookController {
         this.authorService = authorService;
     }
 
-
-    @GetMapping("/getAllBooks")
-    public BookControllerResponse<?> getAllBooks() {
-        try {
-            BookControllerResponse<List<Book>> response = bookControllerResponse.initializeResponse();
-            response.setContent(bookService.getAllBooks());
-            return response;
-        } catch (EmptyDatabaseException e) {
-            return bookControllerResponse.createErrorResponse(ResponseStatus.BookControllerResponse.EMPTY_DATABASE, e);
-        }
-    }
-
-    @GetMapping("/getBook/{id}")
-    public BookControllerResponse<?> getBookById(
-            @PathVariable
-            Integer id) {
-
-        try {
-            BookControllerResponse<Book> response = bookControllerResponse.initializeResponse();
-            Optional<Book> book = bookService.getBookById(id);
-            if (book.isPresent()) {
-                response.setContent(book.get());
-            } else {
-                throw new BookNotExistException();
-            }
-            return response;
-        } catch (Exception e) {
-            return bookControllerResponse.createErrorResponse(ResponseStatus.BookControllerResponse.BOOK_NOT_EXIST, e);
-        }
-    }
-
     @PostMapping("/addBook")
     public BookControllerResponse<?> addBook(
             @RequestBody
@@ -76,7 +45,49 @@ public class BookController {
         }
     }
 
-/*    @PostMapping("/updateBook/{id}")
+    @GetMapping("/getAllBooks")
+    public BookControllerResponse<?> getAllBooks() {
+        try {
+            BookControllerResponse<List<Book>> response = bookControllerResponse.initializeResponse();
+            response.setContent(bookService.getAllBooks());
+            return response;
+        } catch (EmptyDatabaseException e) {
+            return bookControllerResponse.createErrorResponse(ResponseStatus.BookControllerResponse.EMPTY_DATABASE, e);
+        }
+    }
+
+    @DeleteMapping("/deleteBook/{id}")
+    public BookControllerResponse<?> deleteById(
+            @PathVariable
+            Integer id) {
+        try {
+            bookService.deleteById(id);
+            return bookControllerResponse.createSuccessResponse("Delete successfully");
+        } catch (BookNotExistException e) {
+            return bookControllerResponse.createErrorResponse(ResponseStatus.BookControllerResponse.BOOK_NOT_EXIST, e);
+        }
+    }
+
+    @GetMapping("/getBook/{id}")
+    public BookControllerResponse<?> getBookById(
+            @PathVariable
+            Integer id) {
+
+        try {
+            BookControllerResponse<Book> response = bookControllerResponse.initializeResponse();
+            Optional<Book> book = bookService.getById(id);
+            if (book.isPresent()) {
+                response.setContent(book.get());
+            } else {
+                throw new BookNotExistException();
+            }
+            return response;
+        } catch (Exception e) {
+            return bookControllerResponse.createErrorResponse(ResponseStatus.BookControllerResponse.BOOK_NOT_EXIST, e);
+        }
+    }
+
+    @PostMapping("/updateBook/{id}")
     public BookControllerResponse<?> updateBookById(
             @PathVariable
             Integer id,
@@ -88,19 +99,8 @@ public class BookController {
         } catch (BookNotExistException e) {
             return bookControllerResponse.createErrorResponse(ResponseStatus.BookControllerResponse.BOOK_NOT_EXIST, e);
         }
-    }*/
-
-    @DeleteMapping("/deleteBook/{id}")
-    public BookControllerResponse<?> deleteBookById(
-            @PathVariable
-            Integer id) {
-        try {
-            bookService.deleteBookById(id);
-            return bookControllerResponse.createSuccessResponse("Delete successfully");
-        } catch (BookNotExistException e) {
-            return bookControllerResponse.createErrorResponse(ResponseStatus.BookControllerResponse.BOOK_NOT_EXIST, e);
-        }
     }
+
 
     @GetMapping("allAuthors")
     public BookControllerResponse<?> getAllAuthors() {
@@ -109,4 +109,6 @@ public class BookController {
         return response;
 
     }
+
+
 }

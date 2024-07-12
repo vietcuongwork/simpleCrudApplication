@@ -1,17 +1,25 @@
 package com.vietcuong.simpleCrudApplication.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.Set;
 
+// Use those four instead of @Data for Bidirectional Relationships
+@Setter
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
-@Data
 @Table(name = "book")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "bookId") // !
 public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,19 +38,20 @@ public class Book {
     @Column(name = "publication_date")
     private LocalDate publicationDate;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL) // !
     @JoinColumn(name = "publisher_id")
     private Publisher publisher;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL) // !
     @JoinColumn(name = "language_id")
     private Language language;
 
-    @ManyToMany(fetch = FetchType.EAGER) // Change to EAGER fetching
-    @JoinTable(
-            name = "book_author",
-            joinColumns = @JoinColumn(name = "book_id"),
-            inverseJoinColumns = @JoinColumn(name = "author_id")
-    )
-    private Set<Author> authors = new HashSet<>();
+    @ManyToMany(fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+    @JoinTable(name = "book_author",
+            joinColumns = @JoinColumn(name = "book_id",
+                    referencedColumnName = "book_id"),
+            inverseJoinColumns = @JoinColumn(name = "author_id",
+                    referencedColumnName = "author_id"))
+    private Set<Author> authors;
 }
