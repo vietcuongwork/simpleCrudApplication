@@ -25,7 +25,14 @@ public class BookService {
     private final PublisherRepository publisherRepository;
     private final LanguageService languageService;
 
-    public BookService(BookRepository bookRepository, AuthorRepository authorRepository, AuthorService authorService, AuthorRepository authorRepository1, AuthorRepository authorRepository2, LanguageRepository languageRepository, PublisherRepository publisherRepository, LanguageService languageService) {
+    public BookService(BookRepository bookRepository,
+                       AuthorRepository authorRepository,
+                       AuthorService authorService,
+                       AuthorRepository authorRepository1,
+                       AuthorRepository authorRepository2,
+                       LanguageRepository languageRepository,
+                       PublisherRepository publisherRepository,
+                       LanguageService languageService) {
         this.bookRepository = bookRepository;
         this.authorService = authorService;
 
@@ -40,11 +47,11 @@ public class BookService {
             throw new BookExistedException();
         }
 
-        Optional<Language> languageOptional = languageRepository.findByLanguageName(requestBook.getLanguage()
-                .getLanguageName());
+        Optional<Language> languageOptional = languageRepository.findByLanguageName(
+                requestBook.getLanguage().getLanguageName());
         languageOptional.ifPresent(requestBook::setLanguage);
-        Optional<Publisher> publisherOptional = publisherRepository.findByPublisherName(requestBook.getPublisher()
-                .getPublisherName());
+        Optional<Publisher> publisherOptional = publisherRepository.findByPublisherName(
+                requestBook.getPublisher().getPublisherName());
         publisherOptional.ifPresent(requestBook::setPublisher);
         Set<String> authorNames = new HashSet<>();
         for (Author author : requestBook.getAuthors()) {
@@ -52,7 +59,8 @@ public class BookService {
         }
         Set<Author> authors = new HashSet<>();
         for (String authorName : authorNames) {
-            Optional<Author> authorOptional = authorRepository.findByAuthorName(authorName);
+            Optional<Author> authorOptional = authorRepository.findByAuthorName(
+                    authorName);
             if (authorOptional.isPresent()) {
                 authors.add(authorOptional.get());
             } else {
@@ -86,7 +94,8 @@ public class BookService {
 
 
     @Transactional
-    public void updateBookById(Integer id, Book updateBook) throws BookNotExistException {
+    public void updateBookById(Integer id, Book updateBook)
+            throws BookNotExistException {
         Optional<Book> book = bookRepository.findById(id);
         if (book.isEmpty()) {
             throw new BookNotExistException();
@@ -103,7 +112,7 @@ public class BookService {
         if (book.isEmpty()) {
             throw new BookNotExistException();
         }
-        bookRepository.deleteById(id);
+        bookRepository.deleteBookById(id);
     }
 
     public List<Book> getByAuthorId(Integer id) throws AuthorNotExistException {
@@ -116,8 +125,10 @@ public class BookService {
         return bookList;
     }
 
-    public List<Book> getByLanguageName(String languageName) throws LanguageNotExistException {
-        Optional<Language> languageOptional = languageRepository.findByLanguageName(languageName);
+    public List<Book> getByLanguageName(String languageName)
+            throws LanguageNotExistException {
+        Optional<Language> languageOptional = languageRepository.findByLanguageName(
+                languageName);
         List<Book> bookList = new ArrayList<>();
         if (languageOptional.isEmpty()) {
             throw new LanguageNotExistException();
@@ -126,7 +137,8 @@ public class BookService {
         return bookList;
     }
 
-    public void addListOfBooks(List<Book> bookList) throws BookExistedException {
+    public void addListOfBooks(List<Book> bookList)
+            throws BookExistedException {
         for (Book book : bookList) {
             if (findBookByTitle(book)) {
                 addBook(book);
@@ -139,10 +151,13 @@ public class BookService {
         Field[] fields = bookClass.getDeclaredFields(); // Retrieve all declared fields of the Book class, including private ones
         for (Field field : fields) { // Iterate through each field of the Book class
             try {
-                field.setAccessible(true); // Enable access to private fields if necessary
-                Object value = field.get(getBook); // Get the value of the corresponding field from the source Book object (`getBook`)
+                field.setAccessible(
+                        true); // Enable access to private fields if necessary
+                Object value = field.get(
+                        getBook); // Get the value of the corresponding field from the source Book object (`getBook`)
                 if (value != null) { // Check if the value is not null (to avoid overwriting with null values)
-                    field.set(setBook, value); // Set the value of the field in the target Book object (`setBook`)
+                    field.set(setBook,
+                              value); // Set the value of the field in the target Book object (`setBook`)
                 }
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
@@ -151,7 +166,8 @@ public class BookService {
     }
 
     public boolean findBookByTitle(Book requestBook) {
-        Optional<Book> book = bookRepository.findByTitle(requestBook.getTitle());
+        Optional<Book> book = bookRepository.findByTitle(
+                requestBook.getTitle());
         return book.isEmpty();
     }
 
